@@ -12,8 +12,8 @@ Demo: healthy motor on the dashboard, we inject a fault and let it ramp up, the 
 ## Setup
 
 ```
-git clone <this repo>
-cd qnx-camp-qmind
+git clone https://github.com/shaanvirs/camp-qmind-qnx.git
+cd camp-qmind-qnx
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
