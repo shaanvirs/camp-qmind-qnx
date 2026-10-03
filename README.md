@@ -26,10 +26,10 @@ Owners are suggestions. The ideas in the last column are just a starting point, 
 | File | What it does | Owner | Ideas |
 |---|---|---|---|
 | stream.py | Fake vibration, healthy + faults (imbalance, bearing) | Daniel | sine waves + noise, fault = extra frequency or spikes, severity slider |
-| features.py | Raw signal to numbers | Alamjeet | RMS, kurtosis, FFT bands |
-| model.py | Detect a fault, then name it | Aariz | Isolation Forest on healthy data, then a classifier |
-| main.py | Wire it together, time fault to shutoff | Aryan | shutoff after a few bad windows in a row |
-| app.py | Dashboard | Adam | Streamlit is already in requirements |
+| features.py | Raw signal to numbers | | RMS, kurtosis, FFT bands |
+| model.py | Detect a fault, then name it | | Isolation Forest on healthy data, then a classifier |
+| main.py | Wire it together, time fault to shutoff | | shutoff after a few bad windows in a row |
+| app.py | Dashboard | | Streamlit is already in requirements |
 
 ## Interface
 
