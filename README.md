@@ -49,7 +49,6 @@ Run `python check_interfaces.py` to see if everything still matches.
 - Not sure how to do your piece? Do the simplest version first, make it better later.
 - Need something from someone else's file? Use the dummy version, don't wait on them.
 - Want to change the interface? Ask in the channel first, it affects everyone.
-- Stuck 20+ min? Post in the channel.
 - Only edit your own file, small commits, pull before you push.
 
 ## Schedule
