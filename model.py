@@ -28,10 +28,22 @@ def predict(features):
                 or bundle['window_samples'] != WINDOW_SAMPLES
                 or bundle['features_sha256'] != fingerprint):
             raise ValueError('features.py changed since training. Retrain the model.')
+        if 'classifier' not in bundle:
+            raise ValueError('Model file predates the classifier. Rerun python3 train_model.py')
         _bundle = bundle
     x = np.asarray(features, dtype=float)
     if x.shape != (len(FEATURE_NAMES),) or not np.isfinite(x).all():
         raise ValueError(f'Expected {len(FEATURE_NAMES)} finite features in FEATURE_NAMES order.')
-    anomaly = bool(_bundle['detector'].predict(x.reshape(1, -1))[0] == -1)
-    # Confidence is unavailable until a classifier is added. Display N/A.
-    return {'anomaly': anomaly, 'fault': 'unknown' if anomaly else 'normal', 'confidence': 0.0}
+    row = x.reshape(1, -1)
+    anomaly = bool(_bundle['detector'].predict(row)[0] == -1)
+    if not anomaly:
+        # The classifier never saw normal windows, so don't ask it about one.
+        return {'anomaly': False, 'fault': 'normal', 'confidence': 0.0}
+    classifier = _bundle['classifier']
+    probabilities = classifier.predict_proba(row)[0]
+    best = int(np.argmax(probabilities))
+    # Confidence is how sure the classifier is of the name, not of the anomaly.
+    # A flagged window must be named, so low confidence means "faulty, unsure which".
+    return {'anomaly': True,
+            'fault': str(classifier.classes_[best]),
+            'confidence': float(probabilities[best])}
