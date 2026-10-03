@@ -1,13 +1,7 @@
 # takes the list from extract(), returns:
 #   {"anomaly": bool, "fault": str, "confidence": float}
 #
-# fault is "healthy", "imbalance" or "bearing"
-# idea: Isolation Forest for anomaly, then a classifier (your call)
-
-# takes the list from extract(), returns:
-#   {"anomaly": bool, "fault": str, "confidence": float}
-#
-# fault is "healthy", "imbalance" or "bearing"
+# fault is "normal", "imbalance" or "bearing"
 # idea: Isolation Forest for anomaly, then a classifier (your call)
 
 
@@ -26,7 +20,7 @@ def predict(features):
     if _bundle is None:
         path = ROOT / 'anomaly_model.joblib'
         if not path.exists():
-            raise FileNotFoundError('Run python3 train_model.py first.')
+            raise FileNotFoundError('No anomaly_model.joblib. Run: python3 make_data.py && python3 train_model.py')
         bundle = joblib.load(path)  # Load only trusted team-produced artifacts.
         fingerprint = hashlib.sha256((ROOT / 'features.py').read_bytes()).hexdigest()
         if (bundle['feature_names'] != list(FEATURE_NAMES)
