@@ -1,0 +1,3 @@
+# Optional sensor visualization; stream.py itself only needs numpy.
+numpy
+matplotlib
