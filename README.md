@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ## Pieces
 
-Owners are suggestions, we pick at the 2:30 huddle. The ideas in the last column are just a starting point, use something else if you think it's better.
+Owners are suggestions. The ideas in the last column are just a starting point, use something else if you think it's better.
 
 | File | What it does | Owner | Ideas |
 |---|---|---|---|
@@ -43,13 +43,6 @@ predict(features)  # -> {"anomaly": bool, "fault": str, "confidence": float}
 ```
 
 Run `python check_interfaces.py` to see if everything still matches.
-
-## Quick answers
-
-- Not sure how to do your piece? Do the simplest version first, make it better later.
-- Need something from someone else's file? Use the dummy version, don't wait on them.
-- Want to change the interface? Ask in the channel first, it affects everyone.
-- Only edit your own file, small commits, pull before you push.
 
 ## Schedule
 
