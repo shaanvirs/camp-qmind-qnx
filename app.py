@@ -1,180 +1,193 @@
 # streamlit dashboard, run with: streamlit run app.py
-# live chart, status, fault buttons, MOTOR OFF banner, latency
-import time
+# Python runs the pipeline for a whole demo up front (the stream is simulated
+# time, unpaced), then ui/dashboard.html plays it back with a three.js motor,
+# live oscilloscope, status, MOTOR OFF banner and response time.
+import json
+import math
+from pathlib import Path
+
 import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
+
+from stream import WINDOW_SECONDS, stream
+
+try:
+    from features import extract
+except Exception:
+    extract = None
 
 # =====================================================================
-# 1. DATA SOURCE: real run() if main.py is ready, otherwise a fake one
+# 1. DATA SOURCE: real run() if main.py is ready, otherwise a placeholder
 # =====================================================================
 try:
     from main import run
     USING_FAKE = False
 except Exception:
     USING_FAKE = True
+    CONFIRM_WINDOWS = 2
+
+    def _placeholder_predict(f):
+        """Threshold rules on two bands, only until model.py is ready."""
+        low, high = f[3], f[5]
+        scores = {"imbalance": low / 0.85, "bearing": high / 0.09}
+        fault = max(scores, key=scores.get)
+        score = scores[fault]
+        if score < 1:
+            return {"anomaly": False, "fault": "healthy",
+                    "confidence": round(min(0.99, 1.0 - 0.4 * score), 2)}
+        return {"anomaly": True, "fault": fault,
+                "confidence": round(min(0.99, 0.6 + 0.25 * (score - 1)), 2)}
 
     def run(fault="bearing", fault_at=5.0, severity=1.0):
-        """Fake run(): same dict shape the real one should yield."""
-        fs, n = 5000, 1024
-        win, t, flagged = n / fs, 0.0, 0
-        while t < 20:
-            tt = np.arange(n) / fs + t
-            sig = np.sin(2 * np.pi * 30 * tt) + 0.1 * np.random.randn(n)
-            faulty = t >= fault_at
-            if faulty:
-                ramp = min(1.0, (t - fault_at) / 1.0) * severity
-                sig = sig * (1 + ramp) + ramp * 0.5 * np.random.randn(n)
-            anomaly = faulty and t >= fault_at + 0.4
-            flagged = flagged + 1 if anomaly else 0
-            off = flagged >= 2
+        """Placeholder run(): same dict shape the real one should yield."""
+        flagged = 0
+        for w in stream(fault, fault_at, severity, ramp_seconds=1.0):
+            p = _placeholder_predict(extract(w["signal"]))
+            flagged = flagged + 1 if p["anomaly"] else 0
+            off = flagged >= CONFIRM_WINDOWS
+            ready_t = w["t"] + WINDOW_SECONDS
             yield {
-                "t": t, "signal": sig, "anomaly": anomaly,
-                "fault": fault if anomaly else "normal",
-                "confidence": 0.9 if anomaly else 0.1,
+                "t": w["t"], "signal": w["signal"], "anomaly": p["anomaly"],
+                "fault": p["fault"], "confidence": p["confidence"],
                 "motor_off": off,
-                "shutoff_t": t + win if off else None,
-                "latency": (t + win - fault_at) if off else None,
-                "fault_start_t": fault_at if faulty else None,
+                "shutoff_t": ready_t if off else None,
+                "latency": (ready_t - fault_at) if off else None,
+                "fault_start_t": w["fault_start_t"],
             }
             if off:
                 return
-            t += win
 
 
 # =====================================================================
-# 2. LOOK AND FEEL: tweak colors and CSS here
+# 2. RECORD A RUN for the browser to play back
 # =====================================================================
-COLORS = {
-    "healthy": "#2EA043",   # green
-    "warning": "#D29922",   # amber
-    "off": "#DA3633",       # red
-    "idle": "#30363D",      # grey
-}
 TARGET_LATENCY = 0.5
-N = 1024
+MAX_SECONDS = 30
+SAMPLES_PER_WINDOW = 256  # downsampled for display only
+DASHBOARD = Path(__file__).parent / "ui" / "dashboard.html"
 
-st.set_page_config(page_title="Motor Monitor", page_icon="⚙️", layout="wide")
+
+def _num(v):
+    return None if v is None else float(v)
+
+
+def _envelope(sig, bins=SAMPLES_PER_WINDOW):
+    """Downsample keeping the largest-magnitude sample per bin, so impacts survive."""
+    s = sig[: (len(sig) // bins) * bins].reshape(bins, -1)
+    picked = s[np.arange(bins), np.abs(s).argmax(axis=1)]
+    return np.round(picked, 3).tolist()
+
+
+def _display_features(sig):
+    """RMS, kurtosis, 20-60 Hz RMS, 500-2000 Hz RMS for the feature bars."""
+    if extract is None:
+        return None
+    try:
+        f = extract(sig)
+    except Exception:
+        return None
+    return [round(float(f[i]), 4) for i in (0, 2, 3, 5)]
+
+
+def record_run(fault, fault_at, severity):
+    frames = []
+    max_windows = math.ceil(MAX_SECONDS / WINDOW_SECONDS)
+    for w in run(fault=fault, fault_at=fault_at, severity=severity):
+        sig = np.asarray(w["signal"], dtype=np.float64)
+        frames.append({
+            "t": round(float(w["t"]), 4),
+            "s": _envelope(sig),
+            "a": bool(w.get("anomaly")),
+            "f": str(w.get("fault") or "healthy"),
+            "c": _num(w.get("confidence")),
+            "off": bool(w.get("motor_off")),
+            "lat": _num(w.get("latency")),
+            "fs": _num(w.get("fault_start_t")),
+            "sh": _num(w.get("shutoff_t")),
+            "x": _display_features(sig),
+        })
+        if frames[-1]["off"] or len(frames) >= max_windows:
+            break
+    return frames
+
+
+# =====================================================================
+# 3. PAGE
+# =====================================================================
+st.set_page_config(page_title="QMIND Motor Health", page_icon="⚙️", layout="wide")
 
 st.markdown("""
 <style>
-.block-container {padding-top: 2rem; max-width: 1200px;}
-.status-card {border-radius: 14px; padding: 22px 28px; margin-bottom: 18px;
-              color: white; display: flex; justify-content: space-between;
-              align-items: center;}
-.status-title {font-size: 2rem; font-weight: 700; letter-spacing: .5px;}
-.status-sub {font-size: 1rem; opacity: .85; margin-top: 2px;}
-.metric-card {background: #161B22; border: 1px solid #30363D;
-              border-radius: 12px; padding: 16px 20px;}
-.metric-label {font-size: .8rem; text-transform: uppercase;
-               letter-spacing: 1px; color: #8B949E;}
-.metric-value {font-size: 2rem; font-weight: 700; margin-top: 4px;}
+.block-container {padding-top: 1.2rem; padding-bottom: 1rem; max-width: 1500px;}
+header[data-testid="stHeader"] {background: transparent;}
+[data-testid="stSidebar"] {background: linear-gradient(180deg, #0b1222, #070b14);
+                           border-right: 1px solid rgba(148,163,184,.12);}
+[data-testid="stSidebar"] h2 {font-size: 1.05rem; letter-spacing: .3px;}
+iframe {border-radius: 20px;}
+.hist-title {font-size: .8rem; letter-spacing: 1.6px; text-transform: uppercase;
+             color: #56627a; font-weight: 600; margin: 6px 0 4px;}
 </style>
 """, unsafe_allow_html=True)
 
-
-# =====================================================================
-# 3. COMPONENTS: one function per UI piece, easy to edit or swap
-# =====================================================================
-def status_card(slot, state, subtitle=""):
-    titles = {"idle": "MOTOR IDLE", "healthy": "RUNNING: HEALTHY",
-              "warning": "ANOMALY DETECTED", "off": "MOTOR OFF"}
-    slot.markdown(
-        f"""<div class="status-card" style="background:{COLORS[state]}">
-              <div><div class="status-title">{titles[state]}</div>
-              <div class="status-sub">{subtitle}</div></div>
-            </div>""", unsafe_allow_html=True)
-
-
-def metric_card(slot, label, value, color="#E6EDF3"):
-    slot.markdown(
-        f"""<div class="metric-card"><div class="metric-label">{label}</div>
-            <div class="metric-value" style="color:{color}">{value}</div></div>""",
-        unsafe_allow_html=True)
-
-
-def latency_card(slot, latency):
-    if latency is None:
-        metric_card(slot, "Response time", "-")
-    else:
-        ok = latency <= TARGET_LATENCY
-        metric_card(slot, f"Response time (target {TARGET_LATENCY}s)",
-                    f"{latency:.2f} s", COLORS["healthy"] if ok else COLORS["off"])
-
-
-def history_table(slot):
-    h = st.session_state.history
-    if h:
-        slot.dataframe(h, use_container_width=True, hide_index=True)
-    else:
-        slot.caption("No runs yet.")
-
-
-# =====================================================================
-# 4. PAGE LAYOUT
-# =====================================================================
 if "history" not in st.session_state:
     st.session_state.history = []
+if "run" not in st.session_state:
+    st.session_state.run = None
 
 with st.sidebar:
-    st.header("⚙️ Controls")
-    fault = st.selectbox("Fault to inject", ["bearing", "imbalance"])
+    st.header("⚙️ Demo controls")
+    fault = st.selectbox("Fault to inject", ["bearing", "imbalance"],
+                         format_func=str.title)
     severity = st.slider("Severity", 0.1, 2.0, 1.0, 0.1)
     fault_at = st.slider("Fault starts at (s)", 2.0, 10.0, 5.0, 0.5)
     start = st.button("▶ Start demo", type="primary", use_container_width=True)
     if USING_FAKE:
-        st.warning("Using FAKE data (main.py not ready)")
+        st.warning("Using a placeholder detector (main.py has no run() yet).")
+    with st.expander("How it works"):
+        st.markdown(
+            "1. **stream.py** simulates a 30 Hz motor at 5 kHz.\n"
+            "2. **features.py** turns each 0.2 s window into numbers.\n"
+            "3. **model.py** flags and names the fault.\n"
+            "4. **main.py** cuts power after consecutive bad windows.\n\n"
+            "The fault start time is shown for the audience only; "
+            "the model never sees it.")
 
-st.title("Edge-AI Motor Health Monitor")
-st.caption("Simulated motor → features → model → shutoff. "
-           "Pick a fault, press Start, watch it get caught.")
+if start:
+    with st.spinner("Running pipeline…"):
+        frames = record_run(fault, fault_at, severity)
+    n = len(st.session_state.history) + 1
+    st.session_state.run = {"id": n, "fault": fault, "severity": severity,
+                            "fault_at": fault_at, "frames": frames}
+    last = frames[-1] if frames else {}
+    lat = last.get("lat")
+    st.session_state.history.append({
+        "run": n,
+        "injected": fault,
+        "severity": severity,
+        "fault at (s)": fault_at,
+        "detected": last.get("f") if last.get("a") else "—",
+        "response (s)": round(lat, 3) if lat is not None else None,
+        "met target": (lat is not None and lat <= TARGET_LATENCY),
+    })
 
-status_slot = st.empty()
-c1, c2, c3 = st.columns(3)
-state_slot, fault_slot, lat_slot = c1.empty(), c2.empty(), c3.empty()
+r = st.session_state.run
+payload = {
+    "runId": r["id"] if r else 0,
+    "fault": r["fault"] if r else fault,
+    "severity": r["severity"] if r else severity,
+    "frames": r["frames"] if r else [],
+    "win": WINDOW_SECONDS,
+    "spw": SAMPLES_PER_WINDOW,
+    "target": TARGET_LATENCY,
+    "speed": 1,
+    "fake": USING_FAKE,
+}
+html = DASHBOARD.read_text().replace("__PAYLOAD__", json.dumps(payload, separators=(",", ":")))
+components.html(html, height=830, scrolling=True)
 
-st.subheader("Live vibration")
-chart_slot = st.empty()
-
-st.subheader("Past runs")
-history_slot = st.empty()
-
-# =====================================================================
-# 5. RUN LOOP
-# =====================================================================
-if not start:
-    status_card(status_slot, "idle", "Press Start demo in the sidebar")
-    metric_card(state_slot, "Status", "-")
-    metric_card(fault_slot, "Detected fault", "-")
-    latency_card(lat_slot, None)
-    chart_slot.line_chart(np.zeros(N * 5), height=280)
-    history_table(history_slot)
+st.markdown('<div class="hist-title">Past runs</div>', unsafe_allow_html=True)
+if st.session_state.history:
+    st.dataframe(st.session_state.history, use_container_width=True, hide_index=True)
 else:
-    buf = np.zeros(N * 5)  # rolling window of ~1 second
-    last = None
-    for w in run(fault=fault, fault_at=fault_at, severity=severity):
-        last = w
-        buf = np.concatenate([buf[N:], np.asarray(w["signal"])[:N]])
-        chart_slot.line_chart(buf, height=280)
-
-        if w["motor_off"]:
-            status_card(status_slot, "off", f"Fault confirmed at t = {w['t']:.2f} s")
-            metric_card(state_slot, "Status", "STOPPED", COLORS["off"])
-        elif w["anomaly"]:
-            status_card(status_slot, "warning", "Confirming before shutoff...")
-            metric_card(state_slot, "Status", "SUSPICIOUS", COLORS["warning"])
-        else:
-            status_card(status_slot, "healthy", f"t = {w['t']:.1f} s")
-            metric_card(state_slot, "Status", "HEALTHY", COLORS["healthy"])
-
-        metric_card(fault_slot, "Detected fault",
-                    w["fault"].title() if w["anomaly"] else "None")
-        latency_card(lat_slot, w["latency"])
-        time.sleep(0.1)  # pacing for humans; remove if main.py paces itself
-
-    if last and last["latency"] is not None:
-        st.session_state.history.append({
-            "fault": fault, "severity": severity,
-            "latency (s)": round(last["latency"], 3),
-            "met target": last["latency"] <= TARGET_LATENCY,
-        })
-    history_table(history_slot)
+    st.caption("No runs yet. Press ▶ Start demo in the sidebar.")
