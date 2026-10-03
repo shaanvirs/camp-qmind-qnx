@@ -1,2 +1,125 @@
-# stream -> extract -> predict
-# if anomaly: motor off, latency = t - fault_start_t
+"""Integration: stream -> extract -> predict -> motor off, with latency.
+
+app.py can use either:
+    run(...)      generator, one dict per window, ends after shutoff
+    Pipeline      step() / inject() / reset(), for dashboard buttons
+
+Each window dict:
+    t           window start time (s)
+    signal      1024 vibration samples
+    features    list from extract()
+    anomaly     bool
+    fault       "healthy", "imbalance" or "bearing"
+    confidence  float
+    motor_on    bool
+    latency     seconds from fault start to shutoff, None until shutoff
+    true_state  ground truth, display only
+
+Latency = (window end + compute time) - fault_start_t. A window's samples only
+exist once it has filled, so the ~0.2 s window length is included.
+"""
+
+from itertools import islice
+import time
+
+from features import extract
+import model
+from stream import WINDOW_SECONDS, stream
+
+# Anomalous windows in a row needed before shutoff. Each adds ~0.2 s latency.
+CONFIRM_WINDOWS = 2
+
+# Placeholder thresholds, healthy max is about 0.71 and 0.044.
+IMBALANCE_RMS_20_60 = 0.78
+BEARING_RMS_500_2000 = 0.06
+
+
+def placeholder_predict(features):
+    """Simple thresholds, used until model.predict is ready."""
+    low_rms, high_rms = features[3], features[5]
+    if high_rms > BEARING_RMS_500_2000:
+        fault = "bearing"
+    elif low_rms > IMBALANCE_RMS_20_60:
+        fault = "imbalance"
+    else:
+        fault = "healthy"
+    return {"anomaly": fault != "healthy", "fault": fault, "confidence": 1.0}
+
+
+def predict(features):
+    result = model.predict(features)
+    return placeholder_predict(features) if result is None else result
+
+
+class Pipeline:
+    def __init__(self, fault="normal", fault_at=5.0, severity=1.0, ramp_seconds=0.0):
+        self.reset(fault, fault_at, severity, ramp_seconds)
+
+    def reset(self, fault="normal", fault_at=5.0, severity=1.0, ramp_seconds=0.0):
+        """Restart from t=0 with the motor on."""
+        self.windows_done = 0
+        self.bad_in_a_row = 0
+        self.motor_on = True
+        self.latency = None
+        self.last = None
+        self._stream = stream(fault, fault_at, severity, ramp_seconds=ramp_seconds)
+
+    def inject(self, fault, severity=1.0, ramp_seconds=0.0):
+        """Start a fault at the next window."""
+        fault_at = self.windows_done * WINDOW_SECONDS
+        new_stream = stream(fault, fault_at, severity, ramp_seconds=ramp_seconds)
+        # A new stream starts at t=0, so skip ahead to where we are now.
+        self._stream = islice(new_stream, self.windows_done, None)
+
+    def step(self):
+        """Process one window. After shutoff, keeps returning the last result."""
+        if not self.motor_on:
+            return self.last
+
+        window = next(self._stream)
+        self.windows_done += 1
+
+        started = time.perf_counter()
+        features = extract(window["signal"])
+        result = predict(features)
+
+        self.bad_in_a_row = self.bad_in_a_row + 1 if result["anomaly"] else 0
+        if self.bad_in_a_row >= CONFIRM_WINDOWS:
+            self.motor_on = False
+            compute_time = time.perf_counter() - started
+            # fault_start_t is None on a false trip, so there is no latency.
+            if window["fault_start_t"] is not None:
+                shutoff_t = window["t"] + WINDOW_SECONDS + compute_time
+                self.latency = shutoff_t - window["fault_start_t"]
+
+        self.last = {
+            "t": window["t"],
+            "signal": window["signal"],
+            "features": features,
+            "anomaly": result["anomaly"],
+            "fault": result["fault"],
+            "confidence": result["confidence"],
+            "motor_on": self.motor_on,
+            "latency": self.latency,
+            "true_state": window["true_state"],
+        }
+        return self.last
+
+
+def run(fault="bearing", fault_at=5.0, severity=1.0, ramp_seconds=0.0, realtime=True):
+    """Yield one dict per window and stop after the motor is cut."""
+    pipeline = Pipeline(fault, fault_at, severity, ramp_seconds)
+    start = time.perf_counter()
+    while pipeline.motor_on:
+        result = pipeline.step()
+        if realtime:
+            window_end = result["t"] + WINDOW_SECONDS
+            time.sleep(max(0.0, window_end - (time.perf_counter() - start)))
+        yield result
+
+
+if __name__ == "__main__":
+    for r in run():
+        state = "ON " if r["motor_on"] else "OFF"
+        print(f"t={r['t']:6.2f}s  motor={state}  fault={r['fault']:9s}  true={r['true_state']}")
+    print(f"latency: {r['latency']:.3f} s")

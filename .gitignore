@@ -6,3 +6,7 @@ __pycache__/
 models/
 .env
 feature_test.py
+# uv
+.python-version
+pyproject.toml
+uv.lock
