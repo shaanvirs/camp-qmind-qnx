@@ -2,185 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
 :root {
-  --bg: #070b14;
-  --card: rgba(14, 21, 38, 0.78);
-  --card-hi: rgba(22, 31, 54, 0.85);
-  --line: rgba(148, 163, 184, 0.12);
-  --text: #e6edf7;
-  --muted: #8592ab;
-  --dim: #56627a;
-  --accent: #38bdf8;
-  --state: #64748b;
+  --bg: #f6f4ee; --text: #181b20; --muted: #5e6268; --dim: #696b70;
+  --line: #d6d5ce; --accent: #ff493e; --state: #697078;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display: Manrope, Inter, sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: transparent; color: var(--text);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
-
-.app {
-  height: 100vh; display: flex; flex-direction: column; gap: 14px; padding: 16px;
-  border-radius: 20px; border: 1px solid var(--line);
-  background:
-    radial-gradient(900px 420px at 8% -12%, rgba(56, 189, 248, 0.13), transparent 60%),
-    radial-gradient(800px 480px at 100% 0%, color-mix(in srgb, var(--state) 16%, transparent), transparent 62%),
-    linear-gradient(180deg, #080d19, #060a12);
-  transition: background 0.6s;
-}
-.card {
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-}
-
-/* ---------- header ---------- */
-.top { display: flex; align-items: center; gap: 18px; height: 46px; }
-.brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-.logo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  background: conic-gradient(from 200deg, #38bdf8, #818cf8, #22d3a0, #38bdf8);
-  box-shadow: 0 0 24px rgba(56, 189, 248, 0.35); }
-.logo svg { width: 22px; height: 22px; }
-.title { font-size: 18px; font-weight: 800; letter-spacing: 0.2px; }
-.subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.pill { display: flex; align-items: center; gap: 9px; padding: 8px 16px; border-radius: 999px;
-  font-size: 12px; font-weight: 700; letter-spacing: 1.4px;
-  color: var(--state); border: 1px solid color-mix(in srgb, var(--state) 45%, transparent);
-  background: color-mix(in srgb, var(--state) 12%, transparent); transition: all 0.4s; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--state);
-  box-shadow: 0 0 0 0 var(--state); animation: pulse 1.6s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--state) 70%, transparent); }
-  100% { box-shadow: 0 0 0 10px transparent; } }
-.clock { display: flex; flex-direction: column; align-items: flex-end; min-width: 120px; }
-.clock .label, .k { font-size: 10px; letter-spacing: 1.6px; color: var(--dim); font-weight: 600; text-transform: uppercase; }
-.clock .v { font-family: var(--mono); font-size: 20px; font-weight: 700; }
-.badge { font-size: 10px; letter-spacing: 1.2px; font-weight: 700; padding: 5px 9px; border-radius: 6px;
-  color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); }
-
-/* ---------- layout ---------- */
-.grid { flex: 1; min-height: 0; display: grid; gap: 14px;
-  grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr) 252px; }
-
-/* ---------- 3D viewport ---------- */
-.viewport { position: relative; overflow: hidden; background:
-  radial-gradient(circle at 50% 60%, rgba(30, 41, 70, 0.55), rgba(8, 12, 22, 0.9) 70%); }
+html, body { background: var(--bg); color: var(--text); font-family: Inter, sans-serif; }
+body { overflow-x: hidden; }
+button { font: inherit; }
+.app { width: 100%; padding: 0 0 8px; }
+.k, .section-label, .clock .label { font-size: 10px; line-height: 1.5; letter-spacing: .10em; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+.top { display: flex; align-items: center; gap: 24px; min-height: 48px; padding: 0 0 15px; }
+.section-label { color: var(--text); flex: 1; }
+.section-label b { color: var(--accent); margin-right: 10px; font-weight: 600; }
+.pill { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .07em; font-weight: 600; color: var(--state); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.clock { display: flex; gap: 12px; align-items: baseline; }
+.clock .v { font: 500 14px var(--mono); min-width: 72px; text-align: right; }
+.badge { font-size: 10px; color: #9d371d; font-weight: 600; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr); grid-template-rows: 415px 270px; gap: 28px 32px; }
+.viewport { position: relative; overflow: hidden; background: #181b20; color: #f6f4ee; }
 #three { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.viewport .k { color: #b4b8bd; }
 .hud { position: absolute; pointer-events: none; }
-.hud.tl { top: 16px; left: 18px; display: flex; gap: 22px; }
-.hud .big { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1.1; }
-.hud .big small { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 4px; }
-.hud.tr { top: 16px; right: 16px; display: flex; gap: 8px; }
-.chip { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 8px; color: var(--muted);
-  background: rgba(10, 15, 28, 0.7); border: 1px solid var(--line); }
-.chip b { color: var(--text); font-weight: 700; }
-.hud.bl { bottom: 14px; left: 18px; font-size: 11px; color: var(--dim); }
-.hud.br { bottom: 12px; right: 14px; pointer-events: auto; display: flex; gap: 6px; }
-.btn { font: 600 11px Inter, sans-serif; color: var(--muted); background: rgba(10, 15, 28, 0.75);
-  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; }
-.btn:hover { color: var(--text); border-color: rgba(148, 163, 184, 0.35); }
-.btn.on { color: var(--accent); border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.1); }
-
-.banner { position: absolute; left: 50%; top: 80%; transform: translate(-50%, -50%) scale(0.9);
-  opacity: 0; pointer-events: none; transition: all 0.45s cubic-bezier(.2, .9, .3, 1.2);
-  text-align: center; padding: 12px 28px; border-radius: 16px;
-  background: rgba(60, 8, 18, 0.72); border: 1px solid rgba(244, 63, 94, 0.55);
-  box-shadow: 0 0 60px rgba(244, 63, 94, 0.35); backdrop-filter: blur(6px); }
-.banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.banner .b1 { font-size: 24px; font-weight: 800; letter-spacing: 4px; color: #ff5470; }
-.banner .b2 { font-size: 13px; color: #fecdd3; margin-top: 6px; }
-.banner .b2 b { font-family: var(--mono); }
-
-.idle { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); text-align: center;
-  font-size: 13px; color: var(--muted); padding: 10px 18px; border-radius: 10px;
-  background: rgba(10, 15, 28, 0.7); border: 1px solid var(--line); }
-.idle b { color: var(--accent); }
-
-/* ---------- side column ---------- */
-.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-.status { display: flex; gap: 14px; align-items: center; padding: 16px 18px; position: relative; overflow: hidden;
-  border-color: color-mix(in srgb, var(--state) 40%, transparent); transition: border-color 0.4s; }
-.status::before { content: ""; position: absolute; inset: 0;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--state) 22%, transparent), transparent 70%); transition: background 0.4s; }
-.s-icon { position: relative; width: 46px; height: 46px; border-radius: 12px; flex: none; display: grid; place-items: center;
-  background: color-mix(in srgb, var(--state) 18%, transparent); color: var(--state); transition: all 0.4s; }
-.s-icon svg { width: 24px; height: 24px; }
-.s-body { position: relative; min-width: 0; }
-.s-title { font-size: 21px; font-weight: 800; margin-top: 2px; color: var(--state); transition: color 0.4s; }
-.s-sub { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.metric { padding: 12px 14px; }
-.m-value { font-family: var(--mono); font-size: 22px; font-weight: 700; margin-top: 6px; transition: color 0.3s; }
-.m-sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
-.meter { height: 4px; border-radius: 4px; background: rgba(148, 163, 184, 0.12); margin-top: 8px; overflow: hidden; }
-.meter > div { height: 100%; width: 0; border-radius: 4px; background: var(--accent); transition: width 0.25s, background 0.3s; }
-
-.events { flex: 1; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; }
-.ev-list { margin-top: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
-.ev { display: grid; grid-template-columns: 54px 10px 1fr; gap: 8px; align-items: baseline; font-size: 12px;
-  animation: slide 0.35s ease-out; }
-.ev .when { font-family: var(--mono); color: var(--dim); font-size: 11px; }
-.ev .pip { width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); }
-.ev .txt { color: #c7d0e0; }
-.ev-empty { font-size: 12px; color: var(--dim); }
-@keyframes slide { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-
-/* ---------- oscilloscope ---------- */
-.scope { padding: 14px 16px 12px; display: flex; flex-direction: column; min-width: 0; }
+.hud.tl { top: 22px; left: 24px; display: flex; gap: 30px; }
+.hud .big { font: 500 25px var(--mono); line-height: 1.5; }
+.hud .big small { font: 500 10px Inter, sans-serif; color: #b4b8bd; margin-left: 7px; }
+.hud.tr { right: 22px; top: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.chip { font-size: 11px; color: #b4b8bd; }
+.chip b { margin-left: 5px; font-weight: 500; color: #f6f4ee; }
+.hud.bl { bottom: 22px; left: 24px; font-size: 10px; color: #b4b8bd; }
+.hud.br { bottom: 16px; right: 20px; display: flex; gap: 3px; pointer-events: auto; }
+.btn { color: #b4b8bd; border: 1px solid transparent; background: #181b20; font-size: 11px; font-weight: 500; min-height: 32px; padding: 7px 9px; cursor: pointer; }
+.btn:hover { color: #fff; border-color: #696b70; }
+.btn.on { color: #fff; border-bottom-color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn:disabled { opacity: .45; cursor: default; }
+#replay { border-left: 1px solid #43474c; margin-left: 5px; padding-left: 13px; }
+.banner { position: absolute; left: 50%; bottom: 65px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 40px); opacity: 0; pointer-events: none; padding: 12px 20px; background: #f6f4ee; border-left: 4px solid var(--accent); transition: opacity .2s; }
+.banner.show { opacity: 1; }
+.banner .b1 { color: var(--text); font: 800 15px var(--display); letter-spacing: .06em; }
+.banner .b2 { color: #5e6268; font-size: 11px; margin-top: 4px; line-height: 1.5; }
+.banner .b2 b { font-family: var(--mono); color: var(--text); }
+.idle { position: absolute; bottom: 64px; left: 24px; right: 24px; font-size: 11px; color: #b4b8bd; text-align: center; }
+.idle b { color: #fff; font-weight: 500; }
+.side { display: flex; flex-direction: column; min-width: 0; }
+.status { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; border-top: 3px solid var(--accent); padding: 19px 0 22px; }
+.s-icon { order: 2; width: 30px; height: 30px; margin-top: 22px; color: var(--state); flex: none; }
+.s-icon svg { width: 27px; height: 27px; }
+.s-title { font: 800 clamp(24px, 2.5vw, 34px)/1.25 var(--display); letter-spacing: -.055em; margin-top: 7px; }
+.s-sub { color: var(--muted); font-size: 11px; line-height: 1.6; margin-top: 7px; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; flex: 1; }
+.metric { min-width: 0; border-top: 1px solid var(--line); padding: 15px 0; }
+.m-value { font: 700 27px/1.3 var(--display); letter-spacing: -.045em; margin-top: 7px; font-variant-numeric: tabular-nums; }
+#mLat { font-size: 40px; letter-spacing: -.055em; }
+.m-sub { font-size: 10px; line-height: 1.5; color: var(--muted); margin-top: 4px; }
+.meter { height: 2px; background: var(--line); margin-top: 12px; }
+.meter > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.scope { display: flex; flex-direction: column; min-width: 0; border-top: 1px solid var(--text); padding-top: 17px; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.h { font-size: 13px; font-weight: 700; }
-.h span { color: var(--dim); font-weight: 500; margin-left: 8px; font-size: 11px; }
-.legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); }
-.legend i { display: inline-block; width: 10px; height: 2px; margin-right: 6px; vertical-align: middle; }
-#scope { flex: 1; width: 100%; min-height: 0; margin-top: 8px; border-radius: 10px;
-  background: linear-gradient(180deg, rgba(5, 9, 18, 0.9), rgba(9, 14, 26, 0.9)); border: 1px solid var(--line); }
-
-.timeline { margin-top: 10px; }
-.track { position: relative; height: 6px; border-radius: 6px; background: rgba(148, 163, 184, 0.12); }
-.fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 6px;
-  background: linear-gradient(90deg, #22d3a0, var(--state)); }
-.mark { position: absolute; top: -4px; width: 2px; height: 14px; border-radius: 2px; display: none; }
-.mark.fault { background: #fbbf24; color: #fbbf24; }
-.mark.detect { background: #a78bfa; color: #a78bfa; }
-.mark.off { background: #f43f5e; color: #f43f5e; }
-.playhead { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; left: 0;
-  transform: translate(-50%, -50%); background: #fff; box-shadow: 0 0 12px var(--state); }
-.tl-ends { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 8px; }
-
-/* ---------- features ---------- */
-.features { padding: 14px 16px; display: flex; flex-direction: column; gap: 11px; }
-.feat .row { font-size: 12px; }
-.feat .name { color: #c7d0e0; font-weight: 500; }
-.feat .name small { color: var(--dim); margin-left: 6px; }
-.feat .val { font-family: var(--mono); font-size: 12px; font-weight: 600; }
-.bar { position: relative; height: 7px; border-radius: 7px; margin-top: 6px; background: rgba(148, 163, 184, 0.1); }
-.bar .f { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 7px; transition: width 0.18s, background 0.3s; }
-.bar .base { position: absolute; top: -3px; width: 2px; height: 13px; background: rgba(230, 237, 247, 0.55); border-radius: 2px; }
-.feat-note { font-size: 10.5px; color: var(--dim); margin-top: auto; }
-.feat-note i { display: inline-block; width: 2px; height: 10px; background: rgba(230, 237, 247, 0.55); margin-right: 6px; vertical-align: middle; }
-
-.brand > div:last-child { min-width: 0; }
-.title, .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-@media (max-width: 1100px) {
-  .grid { grid-template-columns: minmax(0, 1fr) 290px; }
-  .subtitle { display: none; }
-  .m-value { font-size: 19px; }
+.h { font: 700 16px/1.3 var(--display); letter-spacing: -.025em; }
+.h span { font: 400 10px/1.4 Inter, sans-serif; letter-spacing: 0; display: block; color: var(--muted); margin-top: 6px; }
+.legend { display: flex; gap: 14px; font-size: 10px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 2px; margin-right: 5px; vertical-align: middle; }
+#scope { flex: 1; width: 100%; min-height: 0; margin-top: 12px; }
+.timeline { margin-top: 14px; }
+.track { position: relative; height: 2px; background: var(--line); }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--text); }
+.mark { position: absolute; top: -4px; width: 2px; height: 10px; display: none; }
+.mark.fault { background: #a56720; }
+.mark.detect { background: #ff493e; }
+.mark.off { background: #181b20; }
+.playhead { position: absolute; top: 50%; width: 7px; height: 7px; left: 0; transform: translate(-50%, -50%); background: var(--text); border-radius: 50%; }
+.tl-ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--muted); margin-top: 9px; }
+.features { min-width: 0; border-top: 1px solid var(--text); padding-top: 17px; }
+#feats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; margin-top: 24px; }
+.feat .row { align-items: flex-end; gap: 6px; }
+.feat .name { font-size: 11px; font-weight: 500; }
+.feat .name small { color: var(--muted); display: block; margin-top: 4px; font-size: 10px; font-weight: 400; }
+.feat .val { font: 500 12px var(--mono); }
+.bar { position: relative; height: 3px; margin-top: 10px; background: var(--line); }
+.bar .f { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width .18s; }
+.bar .base { position: absolute; top: -3px; width: 1px; height: 9px; background: #181b20; }
+.feat-note { color: var(--muted); font-size: 10px; margin-top: 23px; line-height: 1.6; }
+.feat-note i { display: inline-block; width: 1px; height: 9px; background: #181b20; margin-right: 7px; }
+.events { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 25px; display: grid; grid-template-columns: 100px 1fr; gap: 24px; }
+.ev-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; min-height: 53px; }
+.ev { display: grid; grid-template-columns: 8px 1fr; align-content: start; align-items: center; gap: 6px; }
+.ev .when { grid-column: 2; font: 10px var(--mono); color: var(--muted); }
+.ev .pip { grid-column: 1; grid-row: 1; width: 4px; height: 4px; border-radius: 50%; }
+.ev .txt { grid-column: 2; font-size: 10px; line-height: 1.65; color: var(--text); }
+.ev-empty { grid-column: 1 / -1; font-size: 11px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 1050px) {
+  .grid { grid-template-columns: minmax(0, 1.6fr) minmax(275px, 1fr); gap: 24px; }
+  .hud.tl { left: 18px; gap: 22px; }
+  .hud.tr { top: 93px; left: 18px; right: auto; align-items: flex-start; flex-direction: row; gap: 20px; }
+  .hud.bl { bottom: 59px; left: 18px; }
+  .idle { bottom: 97px; }
+  .banner { bottom: 88px; }
+  .scope > .row { align-items: flex-start; }
+  .legend { flex-wrap: wrap; max-width: 120px; gap: 6px 12px; }
 }
-@media (max-width: 820px) {
-  html, body { overflow-y: auto; }
-  .app { height: auto; min-height: 100vh; }
-  .top { flex-wrap: wrap; height: auto; }
-  .badge { display: none !important; }
-  .clock { min-width: 0; }
-  .grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: 380px auto 250px auto; }
-  .events { min-height: 150px; }
-  .scope .row { flex-wrap: wrap; }
-  .hud.tl { gap: 14px; }
-  .hud .big { font-size: 20px; }
+@media (max-width: 720px) {
+  .top { gap: 12px; flex-wrap: wrap; padding-bottom: 14px; }
+  .section-label { flex-basis: 100%; }
+  .clock { margin-left: auto; }
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: 360px auto 270px auto; gap: 25px; }
+  .status { padding: 16px 0 20px; }
+  .s-title { font-size: 29px; }
+  .metrics { gap: 0 25px; }
+  .metric { padding: 15px 0; }
+  .hud.tl { left: 18px; top: 18px; }
+  .hud .big { font-size: 23px; }
+  .hud.tr { top: 88px; }
+  .features { padding-bottom: 8px; }
+  .events { grid-template-columns: 1fr; gap: 16px; }
+  .ev-list { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .s-sub { font-size: 12px; }
 }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 </style>
 <script type="importmap">
 { "imports": {
@@ -194,113 +141,64 @@ html, body { height: 100%; background: transparent; color: var(--text);
 
 <div class="app" id="app">
   <header class="top">
-    <div class="brand">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#06101f" stroke-width="2.2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="3.2"/>
-          <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>
-        </svg>
-      </div>
-      <div>
-        <div class="title">QMIND Motor Health</div>
-        <div class="subtitle">Edge-AI vibration monitoring · stream → features → model → shutoff</div>
-      </div>
-    </div>
-    <span class="badge" id="fakeBadge" style="display:none">PLACEHOLDER MODEL</span>
+    <div class="section-label"><b>●</b> Motor experiment <span style="font-weight:400;color:var(--muted)">/ simulated signal</span></div>
+    <span class="badge" id="fakeBadge" style="display:none">Placeholder detector</span>
     <div class="pill"><span class="dot"></span><span id="pillText">IDLE</span></div>
-    <div class="clock"><span class="label">Sim time</span><span class="v" id="clock">0.00 s</span></div>
+    <div class="clock"><span class="label">Elapsed</span><span class="v" id="clock">0.00 s</span></div>
   </header>
-
   <main class="grid">
-    <section class="viewport card" id="viewport">
-      <canvas id="three"></canvas>
+    <section class="viewport" id="viewport" aria-label="Interactive motor visualization">
+      <canvas id="three" aria-label="3D motor, drag to rotate and scroll to zoom"></canvas>
       <div class="hud tl">
         <div><div class="k">Shaft speed</div><div class="big" id="rpm">0<small>RPM</small></div></div>
-        <div><div class="k">Vibration</div><div class="big" id="vib">0.00<small>g·rms</small></div></div>
+        <div><div class="k">Vibration</div><div class="big" id="vib">0.00<small>RMS · a.u.</small></div></div>
       </div>
       <div class="hud tr">
-        <div class="chip">Injected <b id="chipFault">—</b></div>
+        <div class="chip">Fault <b id="chipFault">—</b></div>
         <div class="chip">Severity <b id="chipSev">—</b></div>
       </div>
-      <div class="banner" id="banner">
-        <div class="b1">MOTOR OFF</div>
-        <div class="b2" id="bannerSub">Shut down</div>
-      </div>
-      <div class="idle" id="idle">Pick a fault in the sidebar and press <b>▶ Start demo</b></div>
+      <div class="banner" id="banner"><div class="b1">MOTOR OFF</div><div class="b2" id="bannerSub">Shut down</div></div>
+      <div class="idle" id="idle">Choose a fault above, then <b>Run experiment</b>.</div>
       <div class="hud bl">Drag to orbit · scroll to zoom</div>
-      <div class="hud br">
-        <button class="btn" data-speed="0.5">0.5×</button>
-        <button class="btn" data-speed="1">1×</button>
-        <button class="btn" data-speed="2">2×</button>
+      <div class="hud br" role="group" aria-label="Playback controls">
+        <button class="btn" data-speed="0.5" aria-label="Half speed">0.5×</button>
+        <button class="btn" data-speed="1" aria-label="Normal speed">1×</button>
+        <button class="btn" data-speed="2" aria-label="Double speed">2×</button>
         <button class="btn" id="replay">↻ Replay</button>
       </div>
     </section>
-
-    <aside class="side">
-      <div class="status card">
-        <div class="s-icon" id="sIcon"></div>
-        <div class="s-body">
-          <div class="k">System state</div>
-          <div class="s-title" id="sTitle">Idle</div>
+    <aside class="side" aria-label="Detection results">
+      <div class="status">
+        <div class="s-icon" id="sIcon" aria-hidden="true"></div>
+        <div class="s-body" role="status" aria-live="polite">
+          <div class="k">System state</div><div class="s-title" id="sTitle">Ready to run</div>
           <div class="s-sub" id="sSub">Waiting for a run</div>
         </div>
       </div>
       <div class="metrics">
-        <div class="metric card">
-          <div class="k">Detected fault</div>
-          <div class="m-value" id="mFault">—</div>
-          <div class="m-sub" id="mFaultSub">model output</div>
-        </div>
-        <div class="metric card">
-          <div class="k">Confidence</div>
-          <div class="m-value" id="mConf">—</div>
-          <div class="meter"><div id="mConfBar"></div></div>
-        </div>
-        <div class="metric card">
-          <div class="k">Response time</div>
-          <div class="m-value" id="mLat">—</div>
-          <div class="m-sub" id="mLatSub">target ≤ 0.50 s</div>
-        </div>
-        <div class="metric card">
-          <div class="k">Windows</div>
-          <div class="m-value" id="mWin">0</div>
-          <div class="m-sub">1024 samples @ 5 kHz</div>
-        </div>
-      </div>
-      <div class="events card">
-        <div class="k">Event log</div>
-        <div class="ev-list" id="events"><div class="ev-empty">No events yet.</div></div>
+        <div class="metric"><div class="k">Shutdown response</div><div class="m-value" id="mLat">—</div><div class="m-sub" id="mLatSub">target ≤ 0.50 s</div></div>
+        <div class="metric"><div class="k">Detected fault</div><div class="m-value" id="mFault">—</div><div class="m-sub" id="mFaultSub">Awaiting signal</div></div>
+        <div class="metric"><div class="k">Fault confidence</div><div class="m-value" id="mConf">—</div><div class="meter"><div id="mConfBar"></div></div></div>
+        <div class="metric"><div class="k">Windows analysed</div><div class="m-value" id="mWin">0</div><div class="m-sub">1,024 samples · 5 kHz</div></div>
       </div>
     </aside>
-
-    <section class="scope card">
+    <section class="scope" aria-label="Vibration signal and event timeline">
       <div class="row">
-        <div class="h">Live vibration<span>last ~1 s · accelerometer channel</span></div>
-        <div class="legend">
-          <span><i style="background:#fbbf24"></i>Fault injected</span>
-          <span><i style="background:#a78bfa"></i>Detected</span>
-          <span><i style="background:#f43f5e"></i>Shutoff</span>
-        </div>
+        <div class="h">The vibration signal<span>Last ~1 second · simulated accelerometer · arbitrary units</span></div>
+        <div class="legend"><span><i style="background:#a56720"></i>Injected</span><span><i style="background:#ff493e"></i>Detected</span><span><i style="background:#181b20"></i>Shutoff</span></div>
       </div>
-      <canvas id="scope"></canvas>
-      <div class="timeline">
-        <div class="track">
-          <div class="fill" id="tlFill"></div>
-          <div class="mark fault" id="mkFault" data-label="FAULT"></div>
-          <div class="mark detect" id="mkDetect" data-label="DETECT"></div>
-          <div class="mark off" id="mkOff" data-label="OFF"></div>
-          <div class="playhead" id="playhead"></div>
-        </div>
-        <div class="tl-ends"><span>0.0 s</span><span id="tlEnd">—</span></div>
-      </div>
+      <canvas id="scope" aria-label="Live vibration waveform; detection details are listed in the event log"></canvas>
+      <div class="timeline"><div class="track">
+        <div class="fill" id="tlFill"></div><div class="mark fault" id="mkFault"></div>
+        <div class="mark detect" id="mkDetect"></div><div class="mark off" id="mkOff"></div><div class="playhead" id="playhead"></div>
+      </div><div class="tl-ends"><span>0.0 s</span><span id="tlEnd">—</span></div></div>
     </section>
-
-    <section class="features card">
-      <div class="row"><div class="h">Model inputs<span>per window</span></div></div>
-      <div id="feats"></div>
-      <div class="feat-note"><i></i>healthy baseline</div>
+    <section class="features" aria-label="Signal features">
+      <div class="h">What the model sees<span>Four features shown from each analysis window</span></div>
+      <div id="feats"></div><div class="feat-note"><i></i>Healthy baseline · fault timing is hidden from the model.</div>
     </section>
   </main>
+  <section class="events" aria-label="Event log"><div class="k">Event log</div><div class="ev-list" id="events"><div class="ev-empty">Run an experiment to follow the signal from healthy operation to shutdown.</div></div></section>
 </div>
 
 <script type="module">
@@ -315,9 +213,9 @@ const TAIL = 3.0;
 const BASE_OMEGA = 7.5;
 const RATED_RPM = 1800;
 
-const COLORS = { idle: "#64748b", starting: "#38bdf8", healthy: "#22d3a0", warning: "#fbbf24", off: "#f43f5e" };
+const COLORS = { idle: "#697078", starting: "#697078", healthy: "#37695a", warning: "#a56720", off: "#d7352c" };
 const PILL = { idle: "IDLE", starting: "SPINNING UP", healthy: "RUNNING · HEALTHY", warning: "ANOMALY", off: "MOTOR OFF" };
-const TITLE = { idle: "Idle", starting: "Spinning up", healthy: "Healthy", warning: "Anomaly detected", off: "Motor stopped" };
+const TITLE = { idle: "Ready to run", starting: "Spinning up", healthy: "Healthy", warning: "Anomaly detected", off: "Motor stopped" };
 const ICONS = {
   idle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
   starting: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>',
@@ -349,6 +247,7 @@ const baseline = frames.length && frames[0].x ? frames[0].x : null;
 
 $("fakeBadge").style.display = P.fake ? "" : "none";
 $("idle").style.display = frames.length ? "none" : "";
+$("replay").disabled = !frames.length;
 setText($("chipFault"), frames.length ? title(P.fault) : "—");
 setText($("chipSev"), frames.length ? P.severity.toFixed(1) : "—");
 setText($("tlEnd"), frames.length ? duration.toFixed(1) + " s" : "—");
@@ -360,16 +259,16 @@ for (const [id, t] of [["mkFault", faultT], ["mkDetect", detectT], ["mkOff", off
 
 const events = [];
 if (frames.length) {
-  events.push({ t: 0, c: "#38bdf8", txt: `Motor started · ${RATED_RPM} RPM` });
-  if (faultT != null) events.push({ t: faultT, c: "#fbbf24", txt: `${title(P.fault)} fault injected (hidden from model)` });
+  events.push({ t: 0, c: "#697078", txt: `Motor started · ${RATED_RPM} RPM` });
+  if (faultT != null) events.push({ t: faultT, c: "#a56720", txt: `${title(P.fault)} fault injected (hidden from model)` });
   if (detectT != null) {
     const f = frames[detectIdx];
     const conf = f.c != null ? ` · ${Math.round(f.c * 100)}%` : "";
-    events.push({ t: detectT, c: "#a78bfa", txt: `Anomaly flagged: ${title(f.f)}${conf}` });
+    events.push({ t: detectT, c: "#ff493e", txt: `Anomaly flagged: ${title(f.f)}${conf}` });
   }
   if (offT != null) {
     const lat = offFrame.lat != null ? ` · ${offFrame.lat.toFixed(2)} s after onset` : "";
-    events.push({ t: offT, c: "#f43f5e", txt: `Motor shut off${lat}` });
+    events.push({ t: offT, c: "#181b20", txt: `Motor shut off${lat}` });
   } else {
     events.push({ t: endT, c: "#64748b", txt: "Run ended without shutoff" });
   }
@@ -380,9 +279,9 @@ function renderEvents(t) {
   if (visible.length === shownEvents) return;
   shownEvents = visible.length;
   const list = $("events");
-  if (!visible.length) { list.innerHTML = '<div class="ev-empty">No events yet.</div>'; return; }
-  list.innerHTML = visible.slice().reverse().map((e) =>
-    `<div class="ev"><span class="when">${e.t.toFixed(2)}s</span><span class="pip" style="background:${e.c};box-shadow:0 0 8px ${e.c}"></span><span class="txt">${e.txt}</span></div>`
+  if (!visible.length) { list.innerHTML = '<div class="ev-empty">Run an experiment to follow the signal from healthy operation to shutdown.</div>'; return; }
+  list.innerHTML = visible.map((e) =>
+    `<div class="ev"><span class="when">${e.t.toFixed(2)}s</span><span class="pip" style="background:${e.c}"></span><span class="txt">${e.txt}</span></div>`
   ).join("");
 }
 
@@ -406,7 +305,7 @@ function renderFeatures(x, color) {
     const bar = $("fb" + i);
     bar.style.width = v == null ? "0%" : clamp((100 * Math.max(0, v)) / f.max, 0, 100) + "%";
     const raised = baseline && v != null && v > baseline[i] + Math.max(Math.abs(baseline[i]) * 0.6, 0.05);
-    bar.style.background = raised ? color : "linear-gradient(90deg,#1e6f8f,#38bdf8)";
+    bar.style.background = raised ? color : "#697078";
   });
 }
 
@@ -430,7 +329,9 @@ const controls = new OrbitControls(camera, canvas);
 controls.target.set(0.35, -0.2, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
-controls.autoRotate = true;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+controls.autoRotate = !reducedMotion.matches;
+reducedMotion.addEventListener("change", (event) => { controls.autoRotate = !event.matches; });
 controls.autoRotateSpeed = 0.55;
 controls.minDistance = 4.5;
 controls.maxDistance = 13;
@@ -684,7 +585,7 @@ function drawScope(t, color) {
   const X = (i) => ((i - start) / span) * w;
 
   sctx.lineWidth = 1;
-  sctx.strokeStyle = "rgba(148,163,184,0.07)";
+  sctx.strokeStyle = "rgba(24,27,32,0.08)";
   for (let k = 1; k < 4; k++) { sctx.beginPath(); sctx.moveTo(0, (h * k) / 4); sctx.lineTo(w, (h * k) / 4); sctx.stroke(); }
   for (let i = Math.ceil(start / SPW) * SPW; i < end; i += SPW) {
     const x = X(i);
@@ -707,19 +608,13 @@ function drawScope(t, color) {
     sctx.fillText(label, Math.min(x + 6, w - 90), 14);
     sctx.restore();
   };
-  marker(faultT, "#fbbf24", "FAULT INJECTED");
-  marker(detectT, "#a78bfa", "DETECTED");
-  marker(offT, "#f43f5e", "SHUTOFF");
+  marker(faultT, "#a56720", "FAULT INJECTED");
+  marker(detectT, "#e23d33", "DETECTED");
+  marker(offT, "#181b20", "SHUTOFF");
 
-  const grad = sctx.createLinearGradient(0, 0, w, 0);
-  grad.addColorStop(0, "rgba(56,189,248,0.15)");
-  grad.addColorStop(0.55, "#38bdf8");
-  grad.addColorStop(1, color);
   sctx.save();
-  sctx.strokeStyle = grad;
-  sctx.lineWidth = 1.4;
-  sctx.shadowColor = color;
-  sctx.shadowBlur = 8;
+  sctx.strokeStyle = color;
+  sctx.lineWidth = 1.2;
   sctx.beginPath();
   const i0 = Math.max(0, Math.floor(start));
   const i1 = Math.min(samples.length - 1, Math.floor(end));
@@ -741,9 +636,7 @@ function drawScope(t, color) {
   if (frames.length) {
     const yi = end < samples.length ? samples[Math.max(0, Math.floor(end))] : 0;
     const hy = mid - clamp(yi, -yMax, yMax) * amp;
-    sctx.fillStyle = "#fff";
-    sctx.shadowColor = color;
-    sctx.shadowBlur = 14;
+    sctx.fillStyle = color;
     sctx.beginPath(); sctx.arc(w - 2, hy, 3, 0, Math.PI * 2); sctx.fill();
     sctx.shadowBlur = 0;
   }
@@ -760,9 +653,13 @@ const tgtColor = new THREE.Color();
 
 document.querySelectorAll("[data-speed]").forEach((b) => {
   b.classList.toggle("on", Number(b.dataset.speed) === speed);
+  b.setAttribute("aria-pressed", String(Number(b.dataset.speed) === speed));
   b.addEventListener("click", () => {
     speed = Number(b.dataset.speed);
-    document.querySelectorAll("[data-speed]").forEach((o) => o.classList.toggle("on", o === b));
+    document.querySelectorAll("[data-speed]").forEach((o) => {
+      o.classList.toggle("on", o === b);
+      o.setAttribute("aria-pressed", String(o === b));
+    });
   });
 });
 $("replay").addEventListener("click", () => {
@@ -797,12 +694,12 @@ function renderUI(t, s, color) {
   const anomaly = f && f.a;
   setText($("mFault"), anomaly ? title(f.f) : f ? "None" : "—");
   $("mFault").style.color = anomaly ? COLORS.warning : "";
-  setText($("mFaultSub"), anomaly ? "model output" : "no anomaly flagged");
+  setText($("mFaultSub"), anomaly ? "model output" : f ? "no anomaly flagged" : "Awaiting signal");
 
   const conf = f && f.c != null ? f.c : null;
   setText($("mConf"), conf == null ? "—" : Math.round(conf * 100) + "%");
   $("mConfBar").style.width = conf == null ? "0%" : conf * 100 + "%";
-  $("mConfBar").style.background = anomaly ? color : "#38bdf8";
+  $("mConfBar").style.background = anomaly ? color : "#697078";
 
   const lat = s.kind === "off" && offFrame ? offFrame.lat : null;
   setText($("mLat"), lat == null ? "—" : lat.toFixed(2) + " s");

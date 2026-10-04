@@ -120,19 +120,63 @@ def record_run(fault, fault_at, severity):
 # =====================================================================
 # 3. PAGE
 # =====================================================================
-st.set_page_config(page_title="QMIND Motor Health", page_icon="⚙️", layout="wide")
+st.set_page_config(page_title="Predictive maintenance · QMIND × QNX", page_icon="◉", layout="wide")
 
 st.markdown("""
 <style>
-.block-container {padding-top: 1.2rem; padding-bottom: 1rem; max-width: 1500px;}
-header[data-testid="stHeader"] {background: transparent;}
-[data-testid="stSidebar"] {background: linear-gradient(180deg, #0b1222, #070b14);
-                           border-right: 1px solid rgba(148,163,184,.12);}
-[data-testid="stSidebar"] h2 {font-size: 1.05rem; letter-spacing: .3px;}
-iframe {border-radius: 20px;}
-.hist-title {font-size: .8rem; letter-spacing: 1.6px; text-transform: uppercase;
-             color: #56627a; font-weight: 600; margin: 6px 0 4px;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root { --paper: #f6f4ee; --ink: #181b20; --coral: #ff493e; --rule: #d6d5ce; }
+html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"] { background: var(--paper); color: var(--ink); font-family: Inter, sans-serif; }
+[data-testid="stHeader"] { display: none; }
+.block-container { max-width: 1440px; padding: 2.3rem 3rem 1.5rem; }
+[data-testid="stVerticalBlock"] { gap: 1rem; }
+h1, h2, h3, h4, button { font-family: Manrope, Inter, sans-serif; }
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--ink); padding-bottom: 17px; }
+.masthead .partner { font: 800 14px Manrope, sans-serif; letter-spacing: -.025em; }
+.masthead .edition { color: #5e6268; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.hero { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; padding: 21px 0 10px; }
+.hero .eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .1em; color: #5e6268; text-transform: uppercase; margin-bottom: 8px; }
+.hero h1 { font: 800 clamp(34px, 4.3vw, 58px)/1.13 Manrope, sans-serif; letter-spacing: -.055em; padding: 0; color: var(--ink); margin: 0; }
+.hero p { font: 400 12px/1.7 Inter, sans-serif; color: #5e6268; margin: 13px 0 0; }
+.qnx-mark { width: 116px; height: 116px; display: grid; place-items: center; color: white; background: var(--coral); font: 400 33px Manrope, sans-serif; letter-spacing: -.07em; }
+[data-testid="stForm"] { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); border-radius: 0; padding: 17px 0 12px; }
+[data-testid="stForm"] [data-testid="stWidgetLabel"] p { font: 500 11px Inter, sans-serif; color: #5e6268; }
+[data-baseweb="select"] > div { border-radius: 2px; background: transparent; border-color: #b7b7b1; font: 500 13px Inter, sans-serif; min-height: 40px; }
+[data-testid="stSlider"] { padding-top: 0; }
+[data-testid="stSliderTickBarMin"], [data-testid="stSliderTickBarMax"] { font-family: Inter, sans-serif; }
+[data-testid="stFormSubmitButton"] button { min-height: 42px; border-radius: 2px; background: var(--coral); color: #181b20; border: 1px solid var(--coral); box-shadow: none; font-weight: 700; }
+[data-testid="stFormSubmitButton"] button p { font: 700 12px Manrope, sans-serif; }
+[data-testid="stFormSubmitButton"] button:hover { background: #ef3e34; border-color: #ef3e34; color: #181b20; }
+[data-testid="stFormSubmitButton"] button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+[data-testid="stAlert"] { border-radius: 0; font-size: 12px; }
+iframe { display: block; border: none; border-radius: 0; }
+.history-heading { display: flex; align-items: baseline; justify-content: space-between; border-top: 1px solid var(--ink); padding-top: 18px; margin-top: 6px; }
+.history-heading h2 { font: 700 19px Manrope, sans-serif; letter-spacing: -.035em; padding: 0; margin: 0; }
+.history-heading span { font-size: 10px; color: #5e6268; }
+[data-testid="stExpander"] { border-radius: 0; border: 0; border-top: 1px solid var(--rule); }
+.footer { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 16px; color: #5e6268; font-size: 10px; }
+@media (max-width: 816px) {
+ [data-testid="stIFrame"], [data-testid="stElementContainer"]:has(> [data-testid="stIFrame"]) { height: 1600px; }
+}
+@media (max-width: 360px) {
+ [data-testid="stIFrame"], [data-testid="stElementContainer"]:has(> [data-testid="stIFrame"]) { height: 1700px; }
+}
+@media (max-width: 720px) {
+ [data-testid="stForm"] [data-testid="stHorizontalBlock"] { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
+ [data-testid="stForm"] [data-testid="stColumn"] { width: auto; min-width: 0; }
+ [data-testid="stForm"] [data-testid="stColumn"]:first-child, [data-testid="stForm"] [data-testid="stColumn"]:last-child { grid-column: 1 / -1; }
+ .block-container { padding: 2rem 1rem 1rem; }
+ .masthead .edition { font-size: 8px; text-align: right; }
+ .masthead .partner { font-size: 12px; }
+ .hero { gap: 15px; padding-top: 12px; }
+ .hero h1 { font-size: 35px; }
+ .hero p { font-size: 11px; }
+ .qnx-mark { width: 65px; height: 85px; font-size: 25px; }
+ .history-heading span { font-size: 9px; }
+}
 </style>
+<div class="masthead"><div class="partner">QMIND × BlackBerry QNX</div><div class="edition">Camp QMIND · MVP / October 2026</div></div>
+<div class="hero"><div><div class="eyebrow">Edge-AI motor monitoring</div><h1>Predictive maintenance.</h1><p>Inject a fault. Watch the signal change and the motor shut down.</p></div><div class="qnx-mark" aria-label="QNX">QNX</div></div>
 """, unsafe_allow_html=True)
 
 if "history" not in st.session_state:
@@ -140,28 +184,24 @@ if "history" not in st.session_state:
 if "run" not in st.session_state:
     st.session_state.run = None
 
-with st.sidebar:
-    st.header("⚙️ Demo controls")
-    fault = st.selectbox("Fault to inject", ["bearing", "imbalance"],
-                         format_func=str.title)
-    severity = st.slider("Severity", 0.1, 2.0, 1.0, 0.1)
-    fault_at = st.slider("Fault starts at (s)", 2.0, 10.0, 5.0, 0.5)
-    start = st.button("▶ Start demo", type="primary", use_container_width=True)
-    if USING_FAKE:
-        st.warning("Using a placeholder detector (main.py has no run() yet).")
-    elif MODEL_WARNING:
-        st.warning(f"Not using the trained model: {MODEL_WARNING}")
-    with st.expander("How it works"):
-        st.markdown(
-            "1. **stream.py** simulates a 30 Hz motor at 5 kHz.\n"
-            "2. **features.py** turns each 0.2 s window into numbers.\n"
-            "3. **model.py** flags and names the fault.\n"
-            "4. **main.py** cuts power after consecutive bad windows.\n\n"
-            "The fault start time is shown for the audience only; "
-            "the model never sees it.")
+with st.form("experiment", border=False):
+    fault_col, severity_col, onset_col, run_col = st.columns([1.15, 1, 1, 1], gap="large", vertical_alignment="bottom")
+    with fault_col:
+        fault = st.selectbox("Fault to inject", ["bearing", "imbalance"], format_func=str.title)
+    with severity_col:
+        severity = st.slider("Fault severity", 0.1, 2.0, 1.0, 0.1)
+    with onset_col:
+        fault_at = st.slider("Fault onset · seconds", 2.0, 10.0, 5.0, 0.5)
+    with run_col:
+        start = st.form_submit_button("Run experiment →", type="primary", use_container_width=True)
+
+if USING_FAKE:
+    st.warning("Placeholder detector active. The demo pipeline is unavailable.")
+elif MODEL_WARNING:
+    st.warning(f"Threshold detector active. The trained model is unavailable: {MODEL_WARNING}")
 
 if start:
-    with st.spinner("Running pipeline…"):
+    with st.spinner("Preparing experiment…"):
         frames = record_run(fault, fault_at, severity)
     n = len(st.session_state.history) + 1
     st.session_state.run = {"id": n, "fault": fault, "severity": severity,
@@ -191,10 +231,23 @@ payload = {
     "fake": USING_FAKE,
 }
 html = DASHBOARD.read_text(encoding="utf-8").replace("__PAYLOAD__", json.dumps(payload, separators=(",", ":")))
-components.html(html, height=830, scrolling=True)
+components.html(html, height=880, scrolling=True)
 
-st.markdown('<div class="hist-title">Past runs</div>', unsafe_allow_html=True)
+st.markdown('<div class="history-heading"><h2>Experiment history</h2><span>Results from this session</span></div>', unsafe_allow_html=True)
 if st.session_state.history:
     st.dataframe(st.session_state.history, use_container_width=True, hide_index=True)
 else:
-    st.caption("No runs yet. Press ▶ Start demo in the sidebar.")
+    st.caption("Your completed experiments will appear here.")
+
+with st.expander("From signal to shutdown"):
+    st.markdown(
+        "**Sensor → Features → Model → Shutoff → Dashboard**\n\n"
+        "A simulated 30 Hz motor produces 5,000 signal samples per second. "
+        "Every 1,024 samples, the pipeline extracts vibration features and checks for a fault. "
+        "Consecutive anomalous windows trigger a simulated power cut.\n\n"
+        "The model never receives the fault onset time. Shutdown response measures the "
+        "time from fault onset to the simulated power cut; the target is 0.50 seconds. "
+        "The motor and charts replay the recorded experiment. Playback speed changes "
+        "the presentation only, and Replay uses the same recorded result."
+    )
+st.markdown('<div class="footer"><span>QMIND × BlackBerry QNX</span><span>Predictive maintenance · MVP experiment</span></div>', unsafe_allow_html=True)
