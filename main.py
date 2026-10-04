@@ -9,11 +9,12 @@ Each window dict:
     signal      1024 vibration samples
     features    list from extract()
     anomaly     bool
-    fault       "healthy", "imbalance" or "bearing"
+    fault       "normal", "imbalance" or "bearing"
     confidence  float
-    motor_on    bool
+    motor_off   bool
+    shutoff_t   time the motor was cut, None until shutoff
     latency     seconds from fault start to shutoff, None until shutoff
-    true_state  ground truth, display only
+    true_state, fault_start_t   ground truth, display only
 
 Latency = (window end + compute time) - fault_start_t. A window's samples only
 exist once it has filled, so the ~0.2 s window length is included.
@@ -35,20 +36,22 @@ BEARING_RMS_500_2000 = 0.06
 
 
 def placeholder_predict(features):
-    """Simple thresholds, used until model.predict is ready."""
+    """Simple thresholds, used when no trained model file exists."""
     low_rms, high_rms = features[3], features[5]
     if high_rms > BEARING_RMS_500_2000:
         fault = "bearing"
     elif low_rms > IMBALANCE_RMS_20_60:
         fault = "imbalance"
     else:
-        fault = "healthy"
-    return {"anomaly": fault != "healthy", "fault": fault, "confidence": 1.0}
+        fault = "normal"
+    return {"anomaly": fault != "normal", "fault": fault, "confidence": 1.0}
 
 
 def predict(features):
-    result = model.predict(features)
-    return placeholder_predict(features) if result is None else result
+    try:
+        return model.predict(features)
+    except FileNotFoundError:
+        return placeholder_predict(features)
 
 
 class Pipeline:
@@ -60,6 +63,7 @@ class Pipeline:
         self.windows_done = 0
         self.bad_in_a_row = 0
         self.motor_on = True
+        self.shutoff_t = None
         self.latency = None
         self.last = None
         self._stream = stream(fault, fault_at, severity, ramp_seconds=ramp_seconds)
@@ -87,10 +91,10 @@ class Pipeline:
         if self.bad_in_a_row >= CONFIRM_WINDOWS:
             self.motor_on = False
             compute_time = time.perf_counter() - started
+            self.shutoff_t = window["t"] + WINDOW_SECONDS + compute_time
             # fault_start_t is None on a false trip, so there is no latency.
             if window["fault_start_t"] is not None:
-                shutoff_t = window["t"] + WINDOW_SECONDS + compute_time
-                self.latency = shutoff_t - window["fault_start_t"]
+                self.latency = self.shutoff_t - window["fault_start_t"]
 
         self.last = {
             "t": window["t"],
@@ -99,15 +103,21 @@ class Pipeline:
             "anomaly": result["anomaly"],
             "fault": result["fault"],
             "confidence": result["confidence"],
-            "motor_on": self.motor_on,
+            "motor_off": not self.motor_on,
+            "shutoff_t": self.shutoff_t,
             "latency": self.latency,
             "true_state": window["true_state"],
+            "fault_start_t": window["fault_start_t"],
         }
         return self.last
 
 
-def run(fault="bearing", fault_at=5.0, severity=1.0, ramp_seconds=0.0, realtime=True):
-    """Yield one dict per window and stop after the motor is cut."""
+def run(fault="bearing", fault_at=5.0, severity=1.0, ramp_seconds=1.0, realtime=False):
+    """Yield one dict per window and stop after the motor is cut.
+
+    realtime=True sleeps so windows arrive at motor speed. The dashboard
+    records a whole run and replays it, so it leaves this off.
+    """
     pipeline = Pipeline(fault, fault_at, severity, ramp_seconds)
     start = time.perf_counter()
     while pipeline.motor_on:
@@ -119,7 +129,7 @@ def run(fault="bearing", fault_at=5.0, severity=1.0, ramp_seconds=0.0, realtime=
 
 
 if __name__ == "__main__":
-    for r in run():
-        state = "ON " if r["motor_on"] else "OFF"
+    for r in run(realtime=True):
+        state = "OFF" if r["motor_off"] else "ON "
         print(f"t={r['t']:6.2f}s  motor={state}  fault={r['fault']:9s}  true={r['true_state']}")
     print(f"latency: {r['latency']:.3f} s")
