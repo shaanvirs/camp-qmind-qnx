@@ -80,8 +80,20 @@ button { font: inherit; }
 .mark.fault { background: #a56720; }
 .mark.detect { background: #ff493e; }
 .mark.off { background: #181b20; }
-.playhead { position: absolute; top: 50%; width: 7px; height: 7px; left: 0; transform: translate(-50%, -50%); background: var(--text); border-radius: 50%; }
-.tl-ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--muted); margin-top: 9px; }
+.seek { position: absolute; z-index: 1; left: 0; top: -13px; width: 100%; height: 28px; margin: 0; appearance: none; background: transparent; cursor: pointer; }
+.seek::-webkit-slider-runnable-track { height: 28px; background: transparent; }
+.seek::-moz-range-track { height: 28px; background: transparent; }
+.seek::-webkit-slider-thumb { appearance: none; width: 11px; height: 11px; margin-top: 8.5px; border: 2px solid var(--bg); border-radius: 50%; background: var(--text); box-shadow: 0 0 0 1px var(--text); }
+.seek::-moz-range-thumb { width: 8px; height: 8px; border: 2px solid var(--bg); border-radius: 50%; background: var(--text); box-shadow: 0 0 0 1px var(--text); }
+.seek:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.seek:disabled { cursor: default; }
+.tl-ends { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 10px var(--mono); color: var(--muted); margin-top: 12px; }
+.tl-controls { display: flex; align-items: center; gap: 9px; }
+.tl-toggle { border: 0; background: transparent; color: var(--text); font: 600 10px Inter, sans-serif; cursor: pointer; }
+.tl-toggle:hover { color: var(--accent); }
+.tl-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.tl-toggle:disabled { color: var(--muted); cursor: default; }
+.tl-hint { color: var(--muted); font: 10px Inter, sans-serif; }
 .features { min-width: 0; border-top: 1px solid var(--text); padding-top: 17px; }
 #feats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; margin-top: 24px; }
 .feat .row { align-items: flex-end; gap: 6px; }
@@ -184,14 +196,15 @@ button { font: inherit; }
     </aside>
     <section class="scope" aria-label="Vibration signal and event timeline">
       <div class="row">
-        <div class="h">The vibration signal<span>Last ~1 second · simulated accelerometer · arbitrary units</span></div>
+        <div class="h">The vibration signal<span>~1 second view · drag timeline or scroll over signal to inspect</span></div>
         <div class="legend"><span><i style="background:#a56720"></i>Injected</span><span><i style="background:#ff493e"></i>Detected</span><span><i style="background:#181b20"></i>Shutoff</span></div>
       </div>
-      <canvas id="scope" aria-label="Live vibration waveform; detection details are listed in the event log"></canvas>
-      <div class="timeline"><div class="track">
+      <canvas id="scope" aria-label="Vibration waveform; scroll here to move through the recorded signal"></canvas>
+      <div class="timeline" id="timeline"><div class="track">
         <div class="fill" id="tlFill"></div><div class="mark fault" id="mkFault"></div>
-        <div class="mark detect" id="mkDetect"></div><div class="mark off" id="mkOff"></div><div class="playhead" id="playhead"></div>
-      </div><div class="tl-ends"><span>0.0 s</span><span id="tlEnd">—</span></div></div>
+        <div class="mark detect" id="mkDetect"></div><div class="mark off" id="mkOff"></div>
+        <input class="seek" id="seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="Experiment time; use arrow keys to move through the signal">
+      </div><div class="tl-ends"><span>0.0 s</span><div class="tl-controls"><button class="tl-toggle" id="togglePlayback" type="button">Pause</button><span id="tlCurrent">0.00 s</span><span class="tl-hint">/ <span id="tlEnd">—</span></span></div></div></div>
     </section>
     <section class="features" aria-label="Signal features">
       <div class="h">What the model sees<span>Four features shown from each analysis window</span></div>
@@ -248,6 +261,9 @@ const baseline = frames.length && frames[0].x ? frames[0].x : null;
 $("fakeBadge").style.display = P.fake ? "" : "none";
 $("idle").style.display = frames.length ? "none" : "";
 $("replay").disabled = !frames.length;
+$("seek").disabled = !frames.length;
+$("seek").max = duration.toFixed(2);
+$("togglePlayback").disabled = !frames.length;
 setText($("chipFault"), frames.length ? title(P.fault) : "—");
 setText($("chipSev"), frames.length ? P.severity.toFixed(1) : "—");
 setText($("tlEnd"), frames.length ? duration.toFixed(1) + " s" : "—");
@@ -651,6 +667,34 @@ let angle = 0;
 const curColor = new THREE.Color(COLORS.idle);
 const tgtColor = new THREE.Color();
 
+function seekTo(time) {
+  if (!frames.length) return;
+  simT = clamp(time, 0, duration);
+  playing = false;
+  const runT = Math.min(simT, offT ?? duration);
+  const coastT = simT - runT;
+  const runningOmega = BASE_OMEGA * (1 - Math.exp(-1.4 * runT));
+  omega = runningOmega * Math.exp(-0.55 * coastT);
+  angle = BASE_OMEGA * (runT - (1 - Math.exp(-1.4 * runT)) / 1.4)
+    + (runningOmega / 0.55) * (1 - Math.exp(-0.55 * coastT));
+}
+
+$("seek").addEventListener("input", (event) => seekTo(Number(event.target.value)));
+const scrollSignal = (event) => {
+  if (!frames.length) return;
+  event.preventDefault();
+  const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+  const pixels = delta * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scope.clientWidth : 1);
+  seekTo(simT + pixels * 0.005);
+};
+scope.addEventListener("wheel", scrollSignal, { passive: false });
+$("timeline").addEventListener("wheel", scrollSignal, { passive: false });
+$("togglePlayback").addEventListener("click", () => {
+  if (!frames.length) return;
+  if (simT >= duration) simT = 0;
+  playing = !playing;
+});
+
 document.querySelectorAll("[data-speed]").forEach((b) => {
   b.classList.toggle("on", Number(b.dataset.speed) === speed);
   b.setAttribute("aria-pressed", String(Number(b.dataset.speed) === speed));
@@ -714,8 +758,10 @@ function renderUI(t, s, color) {
   if (frames.length) {
     const p = clamp(t / duration, 0, 1) * 100 + "%";
     $("tlFill").style.width = p;
-    $("playhead").style.left = p;
+    $("seek").value = t.toFixed(2);
   }
+  setText($("tlCurrent"), t.toFixed(2) + " s");
+  setText($("togglePlayback"), playing ? "Pause" : t >= duration ? "Play again" : "Play");
   renderEvents(t);
   renderFeatures(f ? f.x : null, color);
 }
