@@ -183,7 +183,7 @@ payload = {
     "speed": 1,
     "fake": USING_FAKE,
 }
-html = DASHBOARD.read_text().replace("__PAYLOAD__", json.dumps(payload, separators=(",", ":")))
+html = DASHBOARD.read_text(encoding="utf-8").replace("__PAYLOAD__", json.dumps(payload, separators=(",", ":")))
 components.html(html, height=830, scrolling=True)
 
 st.markdown('<div class="hist-title">Past runs</div>', unsafe_allow_html=True)

@@ -14,10 +14,12 @@ Each window dict:
     motor_off   bool
     shutoff_t   time the motor was cut, None until shutoff
     latency     seconds from fault start to shutoff, None until shutoff
+    compute_ms  time spent in extract + predict for this window
     true_state, fault_start_t   ground truth, display only
 
-Latency = (window end + compute time) - fault_start_t. A window's samples only
-exist once it has filled, so the ~0.2 s window length is included.
+Latency = window end - fault_start_t. A window's samples only exist once it
+has filled, so the ~0.2 s window length is included. Compute time is reported
+separately because it depends on how busy the laptop is.
 """
 
 from itertools import islice
@@ -54,6 +56,11 @@ def predict(features):
         return placeholder_predict(features)
 
 
+# The first prediction loads the model and takes several seconds.
+# Do it at import so it never lands in the middle of a demo run.
+predict(extract(next(stream("normal"))["signal"]))
+
+
 class Pipeline:
     def __init__(self, fault="normal", fault_at=5.0, severity=1.0, ramp_seconds=0.0):
         self.reset(fault, fault_at, severity, ramp_seconds)
@@ -87,11 +94,12 @@ class Pipeline:
         features = extract(window["signal"])
         result = predict(features)
 
+        compute_ms = (time.perf_counter() - started) * 1000
+
         self.bad_in_a_row = self.bad_in_a_row + 1 if result["anomaly"] else 0
         if self.bad_in_a_row >= CONFIRM_WINDOWS:
             self.motor_on = False
-            compute_time = time.perf_counter() - started
-            self.shutoff_t = window["t"] + WINDOW_SECONDS + compute_time
+            self.shutoff_t = window["t"] + WINDOW_SECONDS
             # fault_start_t is None on a false trip, so there is no latency.
             if window["fault_start_t"] is not None:
                 self.latency = self.shutoff_t - window["fault_start_t"]
@@ -106,6 +114,7 @@ class Pipeline:
             "motor_off": not self.motor_on,
             "shutoff_t": self.shutoff_t,
             "latency": self.latency,
+            "compute_ms": compute_ms,
             "true_state": window["true_state"],
             "fault_start_t": window["fault_start_t"],
         }
@@ -132,4 +141,4 @@ if __name__ == "__main__":
     for r in run(realtime=True):
         state = "OFF" if r["motor_off"] else "ON "
         print(f"t={r['t']:6.2f}s  motor={state}  fault={r['fault']:9s}  true={r['true_state']}")
-    print(f"latency: {r['latency']:.3f} s")
+    print(f"latency: {r['latency']:.3f} s  (+ {r['compute_ms']:.0f} ms compute)")

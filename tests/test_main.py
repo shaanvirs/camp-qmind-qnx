@@ -17,7 +17,7 @@ class PipelineTests(unittest.TestCase):
             self.assertFalse(any(r["motor_off"] for r in results[:-1]))
             # Worst case: fault starts just after a window begins.
             self.assertGreater(last["latency"], 0)
-            self.assertLess(last["latency"], (CONFIRM_WINDOWS + 1) * WINDOW_SECONDS + 0.1)
+            self.assertLessEqual(last["latency"], (CONFIRM_WINDOWS + 1) * WINDOW_SECONDS)
 
     def test_healthy_motor_stays_on(self):
         # Single flagged windows are allowed, CONFIRM_WINDOWS absorbs them.
@@ -35,7 +35,7 @@ class PipelineTests(unittest.TestCase):
             result = pipeline.step()
         self.assertTrue(result["motor_off"])
         self.assertAlmostEqual(result["t"], (10 + CONFIRM_WINDOWS - 1) * WINDOW_SECONDS)
-        self.assertAlmostEqual(result["latency"], CONFIRM_WINDOWS * WINDOW_SECONDS, delta=0.1)
+        self.assertAlmostEqual(result["latency"], CONFIRM_WINDOWS * WINDOW_SECONDS)
         self.assertIs(pipeline.step(), result)
 
         pipeline.reset()
