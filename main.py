@@ -49,16 +49,34 @@ def placeholder_predict(features):
     return {"anomaly": fault != "normal", "fault": fault, "confidence": 1.0}
 
 
-def predict(features):
+# False means the thresholds above are running instead of the trained model,
+# because anomaly_model.joblib is missing or was trained on an older
+# features.py. The dashboard shows a warning when this is False.
+USING_REAL_MODEL = False
+MODEL_PROBLEM = None
+
+
+def _choose_predictor():
+    """Pick the predictor once, at import, and say so if the model is unusable.
+
+    The first real prediction also loads the model file, which takes a few
+    seconds, so doing it here keeps it out of the middle of a demo run.
+    Only model-file problems fall back. Once the model answers, later errors
+    are real bugs and are allowed to raise.
+    """
+    global USING_REAL_MODEL, MODEL_PROBLEM
+    probe = extract(next(stream("normal"))["signal"])
     try:
-        return model.predict(features)
-    except FileNotFoundError:
-        return placeholder_predict(features)
+        model.predict(probe)
+    except (FileNotFoundError, ValueError) as problem:
+        MODEL_PROBLEM = str(problem)
+        print(f"WARNING: using threshold placeholder, not the model. {problem}")
+        return placeholder_predict
+    USING_REAL_MODEL = True
+    return model.predict
 
 
-# The first prediction loads the model and takes several seconds.
-# Do it at import so it never lands in the middle of a demo run.
-predict(extract(next(stream("normal"))["signal"]))
+predict = _choose_predictor()
 
 
 class Pipeline:

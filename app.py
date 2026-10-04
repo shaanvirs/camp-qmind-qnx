@@ -22,9 +22,14 @@ except Exception:
 # =====================================================================
 try:
     from main import run
+    import main
     USING_FAKE = False
+    # main.py runs, but it may have fallen back to thresholds if the trained
+    # model file is missing or stale. Say so rather than demoing silently.
+    MODEL_WARNING = None if main.USING_REAL_MODEL else main.MODEL_PROBLEM
 except Exception:
     USING_FAKE = True
+    MODEL_WARNING = None
     CONFIRM_WINDOWS = 2
 
     def _placeholder_predict(f):
@@ -144,6 +149,8 @@ with st.sidebar:
     start = st.button("▶ Start demo", type="primary", use_container_width=True)
     if USING_FAKE:
         st.warning("Using a placeholder detector (main.py has no run() yet).")
+    elif MODEL_WARNING:
+        st.warning(f"Not using the trained model: {MODEL_WARNING}")
     with st.expander("How it works"):
         st.markdown(
             "1. **stream.py** simulates a 30 Hz motor at 5 kHz.\n"
